@@ -1,0 +1,14 @@
+node_modules/
+.next/
+.env*
+.env.example
+src/generated/
+.data/
+.local-db/
+test-results/
+playwright-report/
+coverage/
+*.tsbuildinfo
+*.log
+/outputs/
+/work/

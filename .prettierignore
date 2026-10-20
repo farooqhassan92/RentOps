@@ -1,0 +1,8 @@
+node_modules/
+.next/
+src/generated/
+test-results/
+playwright-report/
+.data/
+.local-db/
+package-lock.json

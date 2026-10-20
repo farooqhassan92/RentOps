@@ -1,0 +1,296 @@
+generator client {
+  provider = "prisma-client"
+  output = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum VehicleState {
+  ACTIVE
+  TURNAROUND
+  INACTIVE
+}
+enum RentalState {
+  QUOTE
+  CONFIRMED
+  ACTIVE
+  RETURNED
+  CLOSED
+  CANCELLED
+  NO_SHOW
+}
+enum RateUnit {
+  DAY
+  WEEK
+  MONTH
+}
+enum AllocationKind {
+  RENTAL
+  MAINTENANCE
+}
+enum InspectionKind {
+  CHECKOUT
+  RETURN
+  REPLACEMENT_OUT
+  REPLACEMENT_IN
+}
+enum InvoiceKind {
+  INVOICE
+  CREDIT_NOTE
+}
+enum TransactionKind {
+  PAYMENT
+  PAYMENT_REFUND
+  DEPOSIT_RECEIVED
+  DEPOSIT_REFUND
+  DEPOSIT_APPLIED
+  DEPOSIT_RESTORED
+}
+enum WorkState {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model Business {
+  id String @id @default(cuid())
+  ownerClerkId String @unique
+  name String
+  branchName String
+  country String
+  currency String
+  timezone String
+  address String @default("")
+  email String @default("")
+  phone String @default("")
+  taxId String @default("")
+  taxBps Int @default(0)
+  turnaroundMinutes Int @default(120)
+  invoicePrefix String @default("INV")
+  nextInvoiceNumber Int @default(1)
+  contractTerms String @default("")
+  createdAt DateTime @default(now())
+  vehicles Vehicle[]
+  customers Customer[]
+  rentals Rental[]
+  allocations Allocation[]
+  inspections Inspection[]
+  invoices Invoice[]
+  transactions MoneyTransaction[]
+  maintenance Maintenance[]
+  attachments Attachment[]
+  audits Audit[]
+}
+
+model Vehicle {
+  id String @id @default(cuid())
+  businessId String
+  business Business @relation(fields: [businessId], references: [id], onDelete: Restrict)
+  plate String
+  vin String?
+  make String
+  model String
+  year Int
+  category String
+  color String @default("")
+  state VehicleState @default(ACTIVE)
+  odometer Int @default(0)
+  fuelPercent Int @default(100)
+  dailyRate Int
+  weeklyRate Int
+  monthlyRate Int
+  depositRequired Int @default(0)
+  registrationExpiry DateTime? @db.Date
+  insuranceExpiry DateTime? @db.Date
+  serviceDueDate DateTime? @db.Date
+  serviceDueKm Int?
+  notes String @default("")
+  createdAt DateTime @default(now())
+  rentals Rental[]
+  allocations Allocation[]
+  inspections Inspection[]
+  maintenance Maintenance[]
+  @@unique([businessId, plate])
+  @@unique([businessId, vin])
+  @@unique([businessId, id])
+}
+
+model Customer {
+  id String @id @default(cuid())
+  businessId String
+  business Business @relation(fields: [businessId], references: [id], onDelete: Restrict)
+  name String
+  company String @default("")
+  email String @default("")
+  phone String
+  address String @default("")
+  licenseNumber String
+  licenseExpiry DateTime @db.Date
+  notes String @default("")
+  createdAt DateTime @default(now())
+  rentals Rental[]
+  @@unique([businessId, id])
+}
+
+model Rental {
+  id String @id @default(cuid())
+  businessId String
+  business Business @relation(fields: [businessId], references: [id], onDelete: Restrict)
+  vehicleId String
+  vehicle Vehicle @relation(fields: [businessId, vehicleId], references: [businessId, id], onDelete: Restrict)
+  customerId String
+  customer Customer @relation(fields: [businessId, customerId], references: [businessId, id], onDelete: Restrict)
+  state RentalState @default(QUOTE)
+  startAt DateTime @db.Timestamptz(3)
+  endAt DateTime @db.Timestamptz(3)
+  rateUnit RateUnit
+  unitRate Int
+  taxBps Int
+  depositRequired Int
+  includedKm Int @default(0)
+  extraKmRate Int @default(0)
+  extras Int @default(0)
+  discount Int @default(0)
+  turnaroundMinutes Int
+  notes String @default("")
+  termsSnapshot String
+  actualReturnAt DateTime? @db.Timestamptz(3)
+  nextBillingAt DateTime? @db.Timestamptz(3)
+  billedThrough DateTime? @db.Timestamptz(3)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  allocations Allocation[]
+  inspections Inspection[]
+  invoices Invoice[]
+  transactions MoneyTransaction[]
+  @@unique([businessId, id])
+  @@index([businessId, state])
+}
+
+model Allocation {
+  id String @id @default(cuid())
+  businessId String
+  business Business @relation(fields: [businessId], references: [id], onDelete: Restrict)
+  vehicleId String
+  vehicle Vehicle @relation(fields: [businessId, vehicleId], references: [businessId, id], onDelete: Restrict)
+  kind AllocationKind
+  rentalId String?
+  rental Rental? @relation(fields: [businessId, rentalId], references: [businessId, id], onDelete: Restrict)
+  maintenanceId String?
+  maintenance Maintenance? @relation(fields: [businessId, maintenanceId], references: [businessId, id], onDelete: Restrict)
+  startAt DateTime @db.Timestamptz(3)
+  endAt DateTime @db.Timestamptz(3)
+  active Boolean @default(true)
+  @@index([businessId, vehicleId, active])
+}
+
+model Inspection {
+  id String @id @default(cuid())
+  businessId String
+  business Business @relation(fields: [businessId], references: [id], onDelete: Restrict)
+  rentalId String
+  rental Rental @relation(fields: [businessId, rentalId], references: [businessId, id], onDelete: Restrict)
+  vehicleId String
+  vehicle Vehicle @relation(fields: [businessId, vehicleId], references: [businessId, id], onDelete: Restrict)
+  kind InspectionKind
+  odometer Int
+  fuelPercent Int
+  condition String
+  checklist Json
+  actorClerkId String
+  createdAt DateTime @default(now())
+  @@unique([businessId, rentalId, kind, vehicleId])
+}
+
+model Invoice {
+  id String @id @default(cuid())
+  businessId String
+  business Business @relation(fields: [businessId], references: [id], onDelete: Restrict)
+  rentalId String
+  rental Rental @relation(fields: [businessId, rentalId], references: [businessId, id], onDelete: Restrict)
+  number String
+  kind InvoiceKind @default(INVOICE)
+  originalInvoiceId String?
+  billingKey String
+  description String
+  subtotal Int
+  tax Int
+  total Int
+  periodStart DateTime? @db.Timestamptz(3)
+  periodEnd DateTime? @db.Timestamptz(3)
+  issuedAt DateTime @default(now())
+  dueAt DateTime @db.Timestamptz(3)
+  businessSnapshot Json
+  customerSnapshot Json
+  transactions MoneyTransaction[]
+  @@unique([businessId, number])
+  @@unique([businessId, billingKey])
+  @@unique([businessId, id])
+}
+
+model MoneyTransaction {
+  id String @id @default(cuid())
+  businessId String
+  business Business @relation(fields: [businessId], references: [id], onDelete: Restrict)
+  rentalId String
+  rental Rental @relation(fields: [businessId, rentalId], references: [businessId, id], onDelete: Restrict)
+  invoiceId String?
+  invoice Invoice? @relation(fields: [businessId, invoiceId], references: [businessId, id], onDelete: Restrict)
+  kind TransactionKind
+  amount Int
+  method String
+  reference String @default("")
+  reason String @default("")
+  requestKey String
+  actorClerkId String
+  createdAt DateTime @default(now())
+  @@unique([businessId, requestKey])
+}
+
+model Maintenance {
+  id String @id @default(cuid())
+  businessId String
+  business Business @relation(fields: [businessId], references: [id], onDelete: Restrict)
+  vehicleId String
+  vehicle Vehicle @relation(fields: [businessId, vehicleId], references: [businessId, id], onDelete: Restrict)
+  title String
+  supplier String @default("")
+  state WorkState @default(SCHEDULED)
+  startAt DateTime @db.Timestamptz(3)
+  endAt DateTime @db.Timestamptz(3)
+  cost Int @default(0)
+  notes String @default("")
+  createdAt DateTime @default(now())
+  allocations Allocation[]
+  @@unique([businessId, id])
+}
+
+model Attachment {
+  id String @id @default(cuid())
+  businessId String
+  business Business @relation(fields: [businessId], references: [id], onDelete: Restrict)
+  entityType String
+  entityId String
+  filename String
+  storageKey String @unique
+  contentType String
+  size Int
+  createdAt DateTime @default(now())
+  @@index([businessId, entityType, entityId])
+}
+
+model Audit {
+  id String @id @default(cuid())
+  businessId String
+  business Business @relation(fields: [businessId], references: [id], onDelete: Restrict)
+  actorClerkId String
+  action String
+  entityType String
+  entityId String
+  details Json
+  createdAt DateTime @default(now())
+  @@index([businessId, createdAt])
+}
