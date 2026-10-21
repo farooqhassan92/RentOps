@@ -62,10 +62,7 @@ function ProductPreview() {
               <div>
                 <small>Available vehicles</small>
                 <strong>
-                  3{" "}
-                  <span className="muted" style={{ fontSize: 11 }}>
-                    / 6
-                  </span>
+                  3 <span className="muted preview-metric-context">/ 6</span>
                 </strong>
               </div>
               <div>

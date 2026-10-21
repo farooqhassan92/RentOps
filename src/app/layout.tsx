@@ -21,6 +21,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
                 colorPrimary: "#2563eb",
                 borderRadius: "0.65rem",
                 fontFamily: "var(--font-geist-sans), sans-serif",
+                fontSize: "16px",
+                colorForeground: "#0f172a",
+                colorMutedForeground: "#475569",
               },
             }}
           >
