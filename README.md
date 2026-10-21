@@ -40,7 +40,7 @@ Use an existing PostgreSQL database or start the bundled development-only Postgr
 npm run db:local
 ```
 
-This binds to `127.0.0.1:55432`, creates a local `fleetora` database, and uses the development credentials in `.env.example`. Keep that terminal running. Never use these credentials or the bundled local database for production. On npm versions that block dependency lifecycle scripts, approve the embedded PostgreSQL platform package's hydration script or run it from that package before starting. The standard npm 10 installation runs it automatically.
+This binds to `127.0.0.1:55432`, creates a local `rentops` database, and uses the development credentials in `.env.example`. Keep that terminal running. Never use these credentials or the bundled local database for production. On npm versions that block dependency lifecycle scripts, approve the embedded PostgreSQL platform package's hydration script or run it from that package before starting. The standard npm 10 installation runs it automatically.
 
 Then:
 

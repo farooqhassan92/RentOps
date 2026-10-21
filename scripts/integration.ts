@@ -2,7 +2,7 @@ import { Client } from "pg";
 import { readFile } from "node:fs/promises";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-const connection = new URL(process.env.TEST_DATABASE_URL || "postgresql://fleetora:fleetora_local@127.0.0.1:55432/postgres");
+const connection = new URL(process.env.TEST_DATABASE_URL || "postgresql://rentops:rentops_local@127.0.0.1:55432/postgres");
 const name = `rentops_test_${Date.now()}`;
 const admin = new Client({ connectionString: connection.toString() }); await admin.connect();
 await admin.query(`CREATE DATABASE "${name}"`);

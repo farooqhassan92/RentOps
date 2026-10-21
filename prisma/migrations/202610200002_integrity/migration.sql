@@ -18,8 +18,8 @@ ALTER TABLE "MoneyTransaction" ADD CONSTRAINT "transaction_invoice" CHECK (
   (kind IN ('DEPOSIT_RECEIVED','DEPOSIT_REFUND') AND "invoiceId" IS NULL));
 ALTER TABLE "Business" ADD CONSTRAINT "business_valid_defaults" CHECK ("taxBps" BETWEEN 0 AND 10000 AND "turnaroundMinutes" BETWEEN 0 AND 1440 AND "nextInvoiceNumber" > 0);
 -- Issued financial records are append-only even if an application bug attempts an update.
-CREATE FUNCTION fleetora_immutable() RETURNS trigger LANGUAGE plpgsql AS $$
+CREATE FUNCTION rentops_immutable() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN RAISE EXCEPTION 'Issued financial records and audit events are immutable'; END; $$;
-CREATE TRIGGER immutable_invoice BEFORE UPDATE OR DELETE ON "Invoice" FOR EACH ROW EXECUTE FUNCTION fleetora_immutable();
-CREATE TRIGGER immutable_transaction BEFORE UPDATE OR DELETE ON "MoneyTransaction" FOR EACH ROW EXECUTE FUNCTION fleetora_immutable();
-CREATE TRIGGER immutable_audit BEFORE UPDATE OR DELETE ON "Audit" FOR EACH ROW EXECUTE FUNCTION fleetora_immutable();
+CREATE TRIGGER immutable_invoice BEFORE UPDATE OR DELETE ON "Invoice" FOR EACH ROW EXECUTE FUNCTION rentops_immutable();
+CREATE TRIGGER immutable_transaction BEFORE UPDATE OR DELETE ON "MoneyTransaction" FOR EACH ROW EXECUTE FUNCTION rentops_immutable();
+CREATE TRIGGER immutable_audit BEFORE UPDATE OR DELETE ON "Audit" FOR EACH ROW EXECUTE FUNCTION rentops_immutable();
